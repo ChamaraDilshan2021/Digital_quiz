@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Digital Electronics Quiz</title>
+    <style>
+        :root {
+            --primary: #3b82f6; /* Modern Blue */
+            --primary-dark: #1d4ed8;
+            --bg: #f1f5f9; /* Slate 100 */
+            --text: #0f172a; /* Slate 900 */
+            --card-bg: #ffffff;
+            --success: #10b981;
+            --success-bg: #ecfdf5;
+            --error: #ef4444;
+            --error-bg: #fef2f2;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            background-color: var(--card-bg);
+            padding: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .app-title {
+            font-weight: 800;
+            font-size: 1.25rem;
+            color: var(--primary-dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chapter-select {
+            padding: 0.6rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            font-size: 0.95rem;
+            min-width: 250px;
+            font-weight: 500;
+            background-color: #fff;
+            cursor: pointer;
+        }
+
+        /* Main Container */
+        .container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center; /* Center vertically */
+            padding: 1rem;
+            overflow-y: auto;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            max-width: 850px;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hidden { display: none !important; }
+
+        /* Welcome View */
+        .input-group { margin-bottom: 1.5rem; }
+        .input-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #475569; }
+        .input-group input {
+            width: 100%;
+            padding: 0.9rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+        .input-group input:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        /* Quiz View */
+        .progress-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #64748b;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background-color: #e2e8f0;
+            border-radius: 99px;
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: var(--primary);
+            width: 0%;
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .question-text {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            line-height: 1.4;
+            color: #1e293b;
+        }
+
+        /* Responsive Grid for Options */
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* 2 columns on laptop */
+            gap: 1rem;
+        }
+
+        .option-btn {
+            background: #fff;
+            border: 2px solid var(--border);
+            padding: 1.2rem;
+            text-align: left;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+            position: relative;
+            color: #475569;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+        }
+
+        .option-btn:hover { 
+            border-color: var(--primary);
+            background: #f8fafc;
+        }
+
+        .option-btn.selected { 
+            border-color: var(--primary); 
+            background: #eff6ff; 
+            color: var(--primary-dark);
+        }
+
+        .option-btn.correct { 
+            background-color: var(--success-bg); 
+            border-color: var(--success); 
+            color: #065f46; 
+        }
+        
+        .option-btn.wrong { 
+            background-color: var(--error-bg); 
+            border-color: var(--error); 
+            color: #991b1b; 
+        }
+
+        /* Buttons */
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 2rem;
+            float: right;
+            transition: transform 0.1s, background-color 0.2s;
+            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+        }
+        .btn:hover { background-color: var(--primary-dark); transform: translateY(-1px); }
+        .btn:active { transform: translateY(0); }
+        .btn:disabled { 
+            background-color: #cbd5e1; 
+            cursor: not-allowed; 
+            transform: none; 
+            box-shadow: none;
+        }
+
+        /* Results */
+        .result-score { font-size: 4.5rem; font-weight: 800; color: var(--primary); text-align: center; margin: 0.5rem 0; letter-spacing: -2px; }
+        .result-msg { text-align: center; color: #64748b; margin-bottom: 2rem; font-size: 1.1rem; line-height: 1.6; }
+        
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        .stats-table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 1rem;
+        }
+        .stats-table tr:last-child td { border-bottom: none; }
+
+        /* Mobile Optimization */
+        @media (max-width: 768px) {
+            .top-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .container {
+                padding: 1rem;
+                align-items: start; /* Allow scrolling from top */
+            }
+
+            .card {
+                padding: 1.5rem;
+                box-shadow: none; /* Flatter look on mobile usually feels better/native */
+                border: 1px solid #e2e8f0;
+            }
+
+            .options-grid {
+                grid-template-columns: 1fr; /* Stack vertically on mobile */
+            }
+
+            .question-text {
+                font-size: 1.15rem;
+            }
+
+            .btn {
+                width: 100%;
+                float: none;
+                margin-top: 1.5rem;
+            }
+
+            .result-score {
+                font-size: 3.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <div class="app-title">
+            <span>Digital Electronics</span>
+        </div>
+        <select id="chapterSelect" class="chapter-select"></select>
+    </div>
+
+    <div class="container">
+        
+        <div id="welcomeView" class="card">
+            <h1 style="margin-top: 0; color: #1e293b; font-size: 1.8rem;">Student Assessment</h1>
+            <p style="color: #64748b; margin-bottom: 2rem; line-height: 1.6;">
+                Select a chapter from the top menu to begin.
+            </p>
+            
+            <div class="input-group">
+                <label for="studentName">Student Name</label>
+                <input type="text" id="studentName" placeholder="Enter your name here">
+            </div>
+
+            <button class="btn" onclick="startQuiz()">Start Assessment</button>
+        </div>
+
+        <div id="quizView" class="card hidden">
+            <div class="progress-container">
+                <span>Progress</span>
+                <span>Question <span id="qCurrent">1</span> / <span id="qTotal">50</span></span>
+            </div>
+            <div class="progress-bar">
+                <div id="progressFill" class="progress-fill"></div>
+            </div>
+            
+            <div id="questionText" class="question-text">Loading...</div>
+            <div id="optionsContainer" class="options-grid"></div>
+
+            <button id="nextBtn" class="btn" onclick="nextQuestion()" disabled>Next Question</button>
+        </div>
+
+        <div id="resultView" class="card hidden">
+            <h2 style="text-align: center; margin-bottom: 0;">Assessment Complete</h2>
+            <div style="text-align: center; color: #64748b; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; margin-top: 0.5rem;">Final Score</div>
+            
+            <div id="finalScore" class="result-score">0%</div>
+            <p id="finalMsg" class="result-msg"></p>
+            
+            <div style="background: #f8fafc; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid #e2e8f0;">
+                <table class="stats-table">
+                    <tr>
+                        <td>Student Name:</td>
+                        <td id="resName" style="font-weight: 700; text-align: right; color: #334155;">-</td>
+                    </tr>
+                    <tr>
+                        <td>Chapter:</td>
+                        <td id="resChapter" style="font-weight: 700; text-align: right; color: #334155;">-</td>
+                    </tr>
+                    <tr>
+                        <td>Total Questions:</td>
+                        <td id="resTotal" style="font-weight: 700; text-align: right; color: #334155;">-</td>
+                    </tr>
+                    <tr>
+                        <td>Correct Answers:</td>
+                        <td id="resCorrect" style="font-weight: 700; text-align: right; color: var(--success);">-</td>
+                    </tr>
+                </table>
+            </div>
+
+            <button class="btn" style="float: none; display: block; margin: 0 auto; width: 100%;" onclick="location.reload()">Return to Menu</button>
+        </div>
+
+    </div>
+
+<script>
+    // ==========================================
+    // --- CONFIGURATION & CONTENT ---
+    // ==========================================
+    
+    // Paste your Google Script URL here
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyIxTqGrcjJEVrSGN2WOqdX3H0jTJYMoYjQeQ1wDk6r3N940vWi2RJnSy7NU-VySm-ZqQ/exec"; 
+
+    // ALL QUESTIONS: Verified to have 4 options each
+    const quizData = {
+        
+        "de_ch1": {
+            title: "Digital Electronics: Lecture 01",
+            questions: [
+                // --- Introduction to Digital Electronics ---
+                { q: "What is the fundamental difference between an Analog signal and a Digital signal?", options: ["Analog is discrete; Digital is continuous", "Analog has infinite values; Digital has a finite set of values", "Analog is used in computers; Digital is used in nature", "There is no difference"], a: 1 }, //
+                { q: "Which type of signal is described as 'continuous' and represents physical measurements like temperature or sound?", options: ["Digital Signal", "Discrete Signal", "Binary Signal", "Analog Signal"], a: 3 }, //
+                { q: "Why are digital systems generally preferred over analog systems for computing?", options: ["They are harder to design", "They are more vulnerable to noise", "They are less affected by noise and easier to store/process", "They require infinite storage"], a: 2 }, //
+                { q: "Digital electronics primarily processes data in which form?", options: ["Decimal numbers (0-9)", "Binary numbers (0s and 1s)", "Hexadecimal codes directly", "Continuous sine waves"], a: 1 }, //
+
+                // --- Logic Levels ---
+                { q: "In 'Positive Logic' representation, how are the voltage levels mapped?", options: ["HIGH voltage = 0, LOW voltage = 1", "HIGH voltage = 1, LOW voltage = 0", "HIGH voltage = -1, LOW voltage = +1", "Both levels represent 1"], a: 1 }, //
+                { q: "In 'Negative Logic' representation, what does a HIGH voltage level represent?", options: ["Binary 1", "Binary 0", "Undefined state", "High Impedance"], a: 1 }, //
+                { q: "Which of the following pairs best represents the two states in a digital circuit?", options: ["0 and 9", "ON and OFF", "Top and Bottom", "Left and Right"], a: 1 }, //
+
+                // --- Number Systems: General ---
+                { q: "The 'Base' or 'Radix' of a number system is defined as:", options: ["The total number of digits available in that system", "The highest digit value in the system", "The multiplier of the system", "The binary equivalent"], a: 0 }, //
+                { q: "Which number system is most commonly used by human beings for daily counting?", options: ["Binary", "Octal", "Hexadecimal", "Decimal"], a: 3 }, //
+
+                // --- Decimal System ---
+                { q: "What is the base (radix) of the Decimal number system?", options: ["2", "8", "10", "16"], a: 2 }, //
+                { q: "In the Decimal system, the positional value of digits is based on powers of:", options: ["2", "8", "10", "16"], a: 2 }, //
+
+                // --- Binary System ---
+                { q: "Which number system uses only the digits 0 and 1?", options: ["Decimal", "Binary", "Octal", "Hexadecimal"], a: 1 }, //
+                { q: "Why do computers and digital devices use the Binary system?", options: ["It is easier for humans to read", "It requires 10 different voltage levels", "It can be easily implemented using two-state switches (ON/OFF)", "It saves memory addresses"], a: 2 }, //
+                { q: "In a binary number, the digits are weighted by powers of:", options: ["10", "16", "8", "2"], a: 3 }, //
+
+                // --- Octal System ---
+                { q: "The Octal number system consists of which specific set of digits?", options: ["0 to 7", "0 to 8", "0 to 9", "1 to 8"], a: 0 }, //
+                { q: "Which of the following is NOT a valid digit in the Octal system?", options: ["0", "5", "7", "8"], a: 3 }, //
+                { q: "According to the lecture notes, the Octal system is particularly useful for:", options: ["Representing file permissions in Unix/Linux", "Handling memory addresses", "Counting daily currency", "Defining logic levels"], a: 0 }, //
+                { q: "What is the base of the Octal number system?", options: ["2", "8", "10", "16"], a: 1 }, //
+
+                // --- Hexadecimal System ---
+                { q: "The Hexadecimal number system uses a base of:", options: ["8", "10", "12", "16"], a: 3 }, //
+                { q: "Which characters are used to represent the values 10 to 15 in Hexadecimal?", options: ["X, Y, Z, P, Q, R", "10, 11, 12, 13, 14, 15", "A, B, C, D, E, F", "H, I, J, K, L, M"], a: 2 }, //
+                { q: "According to the lecture notes, Hexadecimal numbers are useful for:", options: ["Representing audio signals", "Handling memory address locations", "Unix file permissions", "Binary arithmetic"], a: 1 }, //
+                { q: "In Hexadecimal, what is the decimal equivalent of the letter 'F'?", options: ["14", "15", "16", "10"], a: 1 }, //
+                { q: "In Hexadecimal, the letter 'A' represents which decimal value?", options: ["10", "11", "12", "13"], a: 0 }, //
+                
+                // --- Mixed Concepts ---
+                { q: "If you see a number containing the digit '9', which system can it definitely NOT be?", options: ["Decimal", "Hexadecimal", "Octal", "Base 10"], a: 2 }, //
+                { q: "Which list correctly orders the number systems by Base size (smallest to largest)?", options: ["Binary, Octal, Decimal, Hexadecimal", "Binary, Decimal, Octal, Hexadecimal", "Octal, Binary, Decimal, Hexadecimal", "Decimal, Binary, Octal, Hexadecimal"], a: 0 } //
+            ]
+        },
+
+        "de_ch2": {
+            title: "Digital Electronics: Lecture 02",
+            questions: [
+                // --- Computer Organization & Architecture ---
+                { q: "What is the primary focus of 'Computer Organization'?", options: ["The logical execution of programs", "The hardware components and how they are connected to form the system", "The design of the operating system", "The aesthetic design of the computer case"], a: 1 }, //
+                { q: "Which term refers to the structure and behavior of the computer as seen by the user/programmer?", options: ["Computer Architecture", "Computer Organization", "Computer Design", "Logic Design"], a: 0 }, //
+                { q: "Computer Design is concerned with:", options: ["The hardware implementation of the computer architecture", "Writing software applications", "Installing the operating system", "Networking protocols"], a: 0 }, //
+                { q: "The three major components of Computer Hardware are usually divided into:", options: ["CPU, RAM, and IOP (Input/Output Processor)", "Keyboard, Mouse, and Monitor", "Windows, Linux, and MacOS", "Web, Email, and Cloud"], a: 0 }, //
+
+                // --- Logic Gates: Basic ---
+                { q: "A Logic Gate is defined as:", options: ["A physical gate that locks a computer", "An electronic circuit with one or more inputs and only one output", "A software program for security", "A type of memory storage"], a: 1 }, //
+                { q: "Which gate produces a High output (1) only if ALL its inputs are High (1)?", options: ["OR Gate", "NOT Gate", "AND Gate", "XOR Gate"], a: 2 }, //
+                { q: "Which gate produces a High output (1) if ANY of its inputs are High (1)?", options: ["AND Gate", "OR Gate", "NAND Gate", "XNOR Gate"], a: 1 }, //
+                { q: "The NOT gate is also commonly known as:", options: ["The Buffer", "The Inverter", "The Multiplier", "The Adder"], a: 1 }, //
+                { q: "If the input to a NOT gate is 1, what is the output?", options: ["1", "0", "High", "Undefined"], a: 1 }, //
+
+                // --- Logic Gates: Universal & Special ---
+                { q: "Which two gates are known as 'Universal Gates'?", options: ["AND and OR", "XOR and XNOR", "NAND and NOR", "NOT and BUFFER"], a: 2 }, //
+                { q: "A NAND gate is functionally equivalent to:", options: ["An AND gate followed by a NOT gate", "An OR gate followed by a NOT gate", "A NOT gate followed by an AND gate", "Two OR gates"], a: 0 }, //
+                { q: "The output of a NOR gate is High (1) only when:", options: ["All inputs are High (1)", "At least one input is High (1)", "All inputs are Low (0)", "Inputs are different"], a: 2 }, //
+                { q: "The XOR (Exclusive-OR) gate produces a High output (1) when:", options: ["All inputs are the same", "The inputs are different (odd number of 1s)", "All inputs are High", "All inputs are Low"], a: 1 }, //
+                { q: "The XNOR (Exclusive-NOR) gate produces a High output (1) when:", options: ["The inputs are different", "The inputs are the same (equivalence)", "Inputs are all zero only", "Inputs are all one only"], a: 1 }, //
+
+                // --- Boolean Algebra Laws ---
+                { q: "Which law states that the order of inputs does not matter (e.g., A + B = B + A)?", options: ["Associative Law", "Distributive Law", "Commutative Law", "Identity Law"], a: 2 }, //
+                { q: "According to the Identity Law (AND form), what is 1.A?", options: ["0", "1", "A", "Not A"], a: 2 }, //
+                { q: "According to the Null Law (OR form), what is 1 + A?", options: ["A", "0", "1", "Undefined"], a: 2 }, //
+                { q: "The Idempotent Law states that A.A is equal to:", options: ["A", "1", "0", "2A"], a: 0 }, //
+                { q: "Which law allows factoring out a variable, like A(B+C) = AB + AC?", options: ["Commutative Law", "Associative Law", "Distributive Law", "Absorption Law"], a: 2 }, //
+                { q: "The Inverse Law states that A + A' (A OR Not A) is equal to:", options: ["0", "1", "A", "A'"], a: 1 }, //
+
+                // --- De Morgan's & Simplification ---
+                { q: "De Morgan's First Theorem states that the complement of a product (AB)' is equal to:", options: ["The sum of the complements (A' + B')", "The product of the complements (A' . B')", "A + B", "A . B"], a: 0 }, //
+                { q: "According to the Absorption Law, what does A + A.B simplify to?", options: ["A.B", "B", "A", "1"], a: 2 }, //
+                { q: "What is the simplified form of the expression A + A'B?", options: ["A", "B", "A + B", "A.B"], a: 2 }, //
+                { q: "Why is minimizing Boolean expressions important in circuit design?", options: ["It makes the circuit look better", "It reduces hardware, cost, and power consumption", "It increases the size of the chip", "It makes the circuit slower"], a: 1 }, //
+                { q: "What is the dual of the expression (A + B) according to De Morgan's laws?", options: ["A.B", "A' . B'", "A' + B'", "AB"], a: 1 } // Note: "Dual" usually refers to swapping AND/OR and 0/1, but context implies De Morgan complement here based on the slide's focus.
+            ]
+        },
+        "de_ch3": {
+            title: "Digital Electronics: Lecture 03",
+            questions: [
+                // --- Canonical & Standard Forms ---
+                { q: "What is the defining characteristic of a Boolean expression in 'Canonical Form'?", options: ["It uses the fewest number of operators possible", "Every term contains every variable in the domain (either complemented or uncomplemented)", "It contains a mix of AND and OR gates", "It has been simplified using a K-Map"], a: 1 }, //
+                { q: "Which symbol is conventionally used to represent a Canonical Sum of Products (SOP)?", options: ["Pi (Π)", "Sigma (Σ)", "Delta (Δ)", "Theta (Θ)"], a: 1 }, //
+                { q: "In a Standard Form expression (unlike Canonical), which of the following is true?", options: ["Each term must contain all variables", "Each term may have any number of variables", "It is always longer than the Canonical form", "It cannot be implemented with logic gates"], a: 1 }, //
+                { q: "A 'Minterm' corresponds to:", options: ["A sum term where the function evaluates to 0", "A product term where the function evaluates to 1", "A variable that is removed during simplification", "A don't care condition"], a: 1 }, //
+                { q: "If a Boolean function is expressed as F = Π(0, 2, 5), what does this represent?", options: ["A Product of Sums (POS) using Maxterms", "A Sum of Products (SOP) using Minterms", "A Standard Form expression", "A Don't Care condition"], a: 0 }, //
+
+                // --- K-Map Basics ---
+                { q: "Why are the cell coordinates in a Karnaugh Map arranged using Gray Code?", options: ["To make it look symmetrical", "So that only one bit changes between any two adjacent cells", "To match the binary counting order (00, 01, 10, 11)", "To increase the power consumption"], a: 1 }, //
+                { q: "In a 4-variable K-Map, how many cells are adjacent to any single cell (including wrapping edges)?", options: ["2", "3", "4", "8"], a: 2 }, //
+                { q: "Which of the following is NOT a valid group size in a K-Map?", options: ["1", "3", "4", "8"], a: 1 }, //
+                { q: "Which logical operation describes the grouping of cells in a K-Map?", options: ["ANDing the terms", "ORing the terms", "XORing the terms", "NANDing the terms"], a: 1 }, // Note: You group 1s (OR logic for SOP), physically finding adjacent terms.
+
+                // --- Implicants (Complex) ---
+                { q: "What is a 'Prime Implicant' (PI)?", options: ["Any group of 1s in a K-Map", "A group of 1s that is NOT a subset of any larger valid group", "A single 1 that cannot be grouped", "A group containing Don't Care conditions only"], a: 1 }, //
+                { q: "A Prime Implicant is classified as an 'Essential Prime Implicant' (EPI) if:", options: ["It is the largest group in the map", "It contains at least one '1' (minterm) that is NOT covered by any other Prime Implicant", "It contains only Don't Care symbols", "It overlaps with at least two other groups"], a: 1 }, //
+                { q: "What is a 'Redundant Prime Implicant'?", options: ["A PI that covers at least one unique minterm", "A PI whose minterms are ALL covered by other Essential Prime Implicants", "A PI that is used in the final expression", "A PI that contains a 0"], a: 1 }, //
+                { q: "What defines a 'Selective Prime Implicant'?", options: ["It is an EPI", "It is a Redundant PI", "It is neither Essential nor Redundant, but needed to cover remaining minterms", "It is a group of Don't Cares"], a: 2 }, //
+                { q: "When writing the final simplified expression from a K-Map, which implicants MUST be included?", options: ["All Prime Implicants", "Only Redundant Prime Implicants", "All Essential Prime Implicants", "Only Selective Prime Implicants"], a: 2 }, //
+
+                // --- Don't Care Conditions ---
+                { q: "What does a 'Don't Care' condition (X) represent in a truth table?", options: ["The input combination causes a short circuit", "The input combination effectively never occurs, or the output state is irrelevant", "The output oscillates between 0 and 1", "The system is powered off"], a: 1 }, //
+                { q: "How should 'Don't Care' cells be treated when simplifying a K-Map?", options: ["Always treat them as 1", "Always treat them as 0", "Treat them as 1 ONLY if it helps form a larger group; otherwise ignore them", "Treat them as 1 only for Maxterms"], a: 2 }, //
+                { q: "Can a valid Prime Implicant consist ENTIRELY of 'Don't Care' cells?", options: ["Yes, to cover all possibilities", "No, a group must contain at least one real '1' to be relevant", "Yes, if it is an Essential Prime Implicant", "No, Don't Cares cannot be grouped"], a: 1 }, //
+                
+                // --- Application & Examples ---
+                { q: "If you have a group of four 1s in a K-Map, how many variables will be eliminated from the resulting term?", options: ["1", "2", "3", "4"], a: 1 }, // (Log2(4) = 2)
+                { q: "In the context of the lecture example, what happens if you treat a Don't Care (d) as a 1?", options: ["It adds a minterm to the function", "It removes a minterm", "It helps minimize the hardware by potentially enlarging a group", "It makes the circuit slower"], a: 2 }, //
+                { q: "Which forms require fewer operators than Canonical forms?", options: ["Standard forms", "Minterm expansions", "Maxterm expansions", "Truth tables"], a: 0 } //
+            ]
+        },
+        "de_ch4": {
+            title: "Digital Electronics: Lecture 04",
+            questions: [
+                // --- Combinational vs Sequential Circuits ---
+                { q: "What is the defining characteristic of a Combinational Logic Circuit?", options: ["Its output depends on past and present inputs", "Its output depends ONLY on the current input", "It requires a clock signal to function", "It contains memory elements"], a: 1 }, //
+                { q: "Which of the following is a key feature of Sequential Circuits?", options: ["They do not have a feedback path", "They are generally faster than combinational circuits", "They contain memory elements to store state", "Their output is independent of previous states"], a: 2 }, //
+                { q: "Which of the following components is an example of a Combinational Circuit?", options: ["Flip-flop", "Counter", "Multiplexer (MUX)", "Register"], a: 2 }, //
+                { q: "Why are Sequential circuits generally considered slower than Combinational circuits?", options: ["They use more electricity", "They depend on clock pulses and memory retrieval", "They use fewer gates", "They utilize analog signals"], a: 1 }, //
+                { q: "Which type of circuit requires a 'Feedback' path from output to input?", options: ["Combinational Circuit", "Sequential Circuit", "Both types", "Neither type"], a: 1 }, //
+                { q: "A Digital Watch is a practical example of which type of circuit?", options: ["Combinational Circuit", "Sequential Circuit", "Analog Circuit", "Linear Circuit"], a: 1 }, //
+
+                // --- Binary Arithmetic ---
+                { q: "In binary addition, what is the result of $1 + 1$?", options: ["0 with no carry", "1 with carry 0", "0 with carry 1", "1 with carry 1"], a: 2 }, //
+                { q: "In binary addition, what is the result of adding three 1s ($1 + 1 + 1$)?", options: ["Sum = 0, Carry = 1", "Sum = 1, Carry = 1", "Sum = 1, Carry = 0", "Sum = 0, Carry = 0"], a: 1 }, //
+                { q: "In binary subtraction, what is the result of $0 - 1$?", options: ["1 with a borrow of 1", "0 with no borrow", "1 with no borrow", "0 with a borrow of 1"], a: 0 }, //
+                { q: "Which logic gate operation corresponds exactly to the 'Sum' output in binary addition?", options: ["AND", "OR", "XOR", "NAND"], a: 2 }, //
+
+                // --- Half Adders ---
+                { q: "What is the primary limitation of a Half Adder?", options: ["It cannot add two binary digits", "It does not accept a Carry input from a previous stage", "It is too slow", "It requires too many gates"], a: 1 }, //
+                { q: "A Half Adder circuit consists of which two logic gates?", options: ["Two AND gates", "One XOR gate and one OR gate", "One XOR gate and one AND gate", "Two NAND gates"], a: 2 }, //
+                { q: "In a Half Adder, the 'Carry' output is produced by which logic function?", options: ["$A + B$ (OR)", "$A \\oplus B$ (XOR)", "$A \\cdot B$ (AND)", "$\\overline{A \\cdot B}$ (NAND)"], a: 2 }, //
+                { q: "How many inputs and outputs does a Half Adder have?", options: ["3 inputs, 2 outputs", "2 inputs, 2 outputs", "2 inputs, 1 output", "3 inputs, 1 output"], a: 1 }, //
+
+                // --- Full Adders ---
+                { q: "What distinguishes a Full Adder from a Half Adder?", options: ["A Full Adder handles 3 inputs ($A, B, C_{in}$)", "A Full Adder has no Carry output", "A Full Adder is slower", "A Full Adder uses only OR gates"], a: 0 }, //
+                { q: "A Full Adder can be constructed using:", options: ["Two Half Adders and one OR gate", "Two Half Adders and one AND gate", "Three Half Adders", "Two XOR gates only"], a: 0 }, //
+                { q: "The Boolean expression for the Sum ($S$) of a Full Adder is:", options: ["$A \\cdot B \\cdot C_{in}$", "$A + B + C_{in}$", "$A \\oplus B \\oplus C_{in}$", "$AB + BC + AC$"], a: 2 }, //
+                { q: "In a Full Adder, the Carry Output ($C_{out}$) represents:", options: ["When the sum is zero", "The majority function (true if 2 or more inputs are 1)", "The parity of the inputs", "The inverse of the sum"], a: 1 }, //
+
+                // --- Signed Binary Representation ---
+                { q: "In signed binary representation, which bit is designated as the 'Sign Bit'?", options: ["The Least Significant Bit (LSB)", "The Most Significant Bit (MSB)", "The middle bit", "The parity bit"], a: 1 }, //
+                { q: "In the sign bit convention, what does a '1' indicate?", options: ["Positive number", "Negative number", "Zero", "Overflow"], a: 1 }, //
+                { q: "What is a major disadvantage of the 'Sign-Magnitude' representation?", options: ["It cannot represent negative numbers", "It has two representations for zero (+0 and -0)", "It uses too many bits", "It is hard to read"], a: 1 }, //
+
+                // --- Complements (1's and 2's) ---
+                { q: "How do you obtain the 1's Complement of a binary number?", options: ["Add 1 to the LSB", "Invert all the bits (0 becomes 1, 1 becomes 0)", "Invert only the sign bit", "Subtract the number from $2^n$"], a: 1 }, //
+                { q: "How is the 2's Complement of a number calculated?", options: ["Invert all bits", "Add 1 to the number", "Find 1's Complement and add 1 to the LSB", "Invert the sign bit only"], a: 2 }, //
+                { q: "Why is 2's Complement preferred over 1's Complement in computers?", options: ["It is easier to print", "It eliminates the double zero problem and simplifies arithmetic hardware", "It allows for decimal points", "It uses fewer bits"], a: 1 }, //
+                { q: "What is the 1's complement of the binary number `101100`?", options: ["010011", "010100", "101101", "001100"], a: 0 }, //
+                { q: "What is the 2's complement of the binary number `00010100` (+20)?", options: ["11101011", "11101100", "11101101", "00010101"], a: 1 }, //
+
+                // --- Complement Arithmetic ---
+                { q: "In 1's Complement Subtraction, what do you do if a final carry is generated?", options: ["Discard it", "Add it to the result (End-around carry)", "Subtract it from the result", "Declare an error"], a: 1 }, //
+                { q: "In 2's Complement Subtraction, what do you do if a final carry is generated?", options: ["Add it to the result", "Discard it (ignore it)", "Invert the result", "Complement the result"], a: 1 }, //
+                { q: "If NO carry is produced in a 1's Complement subtraction operation, what does it indicate?", options: ["The result is positive", "The result is negative and in 1's complement form", "The result is zero", "The calculation is invalid"], a: 1 }, //
+                { q: "To represent $-20$ in an 8-bit computer system using 2's complement, you would store:", options: ["10010100", "11101011", "11101100", "00010100"], a: 2 } //
+            ]
+        },
+        "de_ch5": {
+            title: "Digital Electronics: Lecture 05",
+            questions: [
+                // --- Introduction to Sequential Circuits ---
+                { q: "What is the defining characteristic of a Sequential Circuit compared to a Combinational one?", options: ["It has no memory", "Its output depends on both current inputs and previous state (memory)", "Its output depends only on current inputs", "It is faster"], a: 1 }, //
+                { q: "Sequential circuits are essential for implementing:", options: ["Simple addition only", "State machines, timers, counters, and memory elements", "Inverters", "Logic gates only"], a: 1 }, //
+                { q: "In the block diagram of a sequential circuit, 'Secondary Inputs' refer to:", options: ["External user inputs", "State variables produced by the storage elements", "The clock signal", "Power supply inputs"], a: 1 }, //
+                { q: "What are 'Secondary Outputs' in the context of sequential circuit design?", options: ["The final result for the user", "Excitations for the storage elements (inputs to flip-flops)", "Heat dissipation", "Error codes"], a: 1 }, //
+
+                // --- Types of Sequential Circuits ---
+                { q: "Which type of sequential circuit changes state only at discrete instants of time (clock pulses)?", options: ["Asynchronous", "Synchronous", "Combinational", "Analog"], a: 1 }, //
+                { q: "In an Asynchronous Sequential Circuit, state changes occur:", options: ["Only when the clock ticks", "Whenever the input variables change", "At fixed intervals", "Never"], a: 1 }, //
+                { q: "Why are Synchronous circuits generally easier to design than Asynchronous ones?", options: ["They use fewer gates", "They avoid instability and timing problems by synchronizing changes to a clock", "They do not require power", "They are faster"], a: 1 }, //
+                { q: "Clocked Sequential Circuits use what specific element for synchronization?", options: ["Capacitors", "Periodic Clock Pulses", "Resistors", "Inductors"], a: 1 }, //
+
+                // --- Clock Pulse & Triggering ---
+                { q: "What is a 'Clock Pulse'?", options: ["A DC voltage", "A periodic signal where one full cycle represents one time interval", "A random noise signal", "A ground connection"], a: 1 }, //
+                { q: "In 'Positive Level Triggering', the circuit responds when the clock signal is:", options: ["Logic Low (0)", "Logic High (1)", "Transitioning from 0 to 1", "Transitioning from 1 to 0"], a: 1 }, //
+                { q: "Which triggering method responds to the *transition* of the clock signal rather than the stable level?", options: ["Level Triggering", "Edge Triggering", "Pulse Triggering", "Static Triggering"], a: 1 }, //
+                { q: "What is the key advantage of 'Edge Triggering' over 'Level Triggering'?", options: ["It is cheaper", "It prevents feedback issues by responding only at the precise instant of transition", "It allows the input to change constantly", "It is slower"], a: 1 }, //
+                { q: "Negative Edge Triggering occurs on which transition?", options: ["Low to High (Rising)", "High to Low (Falling)", "High to High", "Low to Low"], a: 1 }, //
+
+                // --- Latches ---
+                { q: "What is the main difference between a Latch and a Flip-Flop?", options: ["Latches are edge-triggered; Flip-Flops are level-triggered", "Latches are level-sensitive; Flip-Flops are edge-sensitive (clocked)", "Latches have no memory", "There is no difference"], a: 1 }, //
+                { q: "An SR Latch built with NOR gates has an 'Undefined' state when:", options: ["S=0, R=0", "S=1, R=0", "S=0, R=1", "S=1, R=1"], a: 3 }, //
+                { q: "In a NOR-based SR Latch, if S=1 and R=0, the Next State (Q) will be:", options: ["0 (Reset)", "1 (Set)", "Unchanged", "Undefined"], a: 1 }, //
+                { q: "How is an SR Latch constructed using NAND gates different from the NOR version?", options: ["The inputs are active HIGH", "The inputs are active LOW ($S'$ and $R'$)", "It has no feedback", "It cannot store data"], a: 1 }, //
+                { q: "For a NAND-based SR Latch, the 'Undefined' state occurs when:", options: ["S=1, R=1", "S=0, R=0", "S=1, R=0", "S=0, R=1"], a: 1 }, //
+
+                // --- Flip-Flops: SR & JK ---
+                { q: "What is the characteristic equation for an SR Flip-Flop?", options: ["$Q(n+1) = S + R'Q_n$", "$Q(n+1) = JQ' + K'Q$", "$Q(n+1) = D$", "$Q(n+1) = T \\oplus Q$"], a: 0 }, //
+                { q: "Why is the JK Flip-Flop considered an improvement over the SR Flip-Flop?", options: ["It is cheaper", "It defines the state when both inputs are 1 (Toggle state) instead of being undefined", "It is smaller", "It uses AC power"], a: 1 }, //
+                { q: "In a JK Flip-Flop, if J=1 and K=1, the Next State will be:", options: ["No Change ($Q_n$)", "Set (1)", "Reset (0)", "Toggle ($Q_n'$ - inverted)"], a: 3 }, //
+                { q: "In a JK Flip-Flop, if J=0 and K=1, the Next State is:", options: ["Reset (0)", "Set (1)", "Toggle", "No Change"], a: 0 }, //
+                { q: "What happens in a JK Flip-Flop if J=0 and K=0?", options: ["Reset", "Set", "Toggle", "No Change (Memory)"], a: 3 }, //
+
+                // --- Flip-Flops: D ---
+                { q: "What is the primary function of a D (Delay) Flip-Flop?", options: ["To invert the input", "To store the value of D at the clock edge (Data Storage)", "To toggle", "To count"], a: 1 }, //
+                { q: "How is a D Flip-Flop derived from an SR Flip-Flop?", options: ["By connecting S and R directly", "By ensuring S and R are complements ($S=D, R=D'$)", "By grounding R", "By connecting both to Vcc"], a: 1 }, //
+                { q: "What is the characteristic equation for a D Flip-Flop?", options: ["$Q(n+1) = D$", "$Q(n+1) = D'$", "$Q(n+1) = D + Q_n$", "$Q(n+1) = 1$"], a: 0 }, //
+                { q: "If D=1 and the clock triggers, what is the Next State ($Q_{n+1}$) of a D Flip-Flop?", options: ["0", "1", "Toggle", "Unchanged"], a: 1 }, //
+
+                // --- Technical Details ---
+                { q: "The 'Characteristic Table' of a flip-flop defines:", options: ["The logical properties and next state based on inputs and current state", "The cost of the chip", "The physical size", "The power usage"], a: 0 }, //
+                { q: "Which state represents 'Memory' or 'No Change' in an SR Flip-Flop?", options: ["S=0, R=0", "S=0, R=1", "S=1, R=0", "S=1, R=1"], a: 0 }, //
+                { q: "In the symbol for a flip-flop, what does the triangle at the clock input indicate?", options: ["It is an amplifier", "It is Edge-Triggered", "It is Level-Triggered", "It is broken"], a: 1 } //
+            ]
+        },
+        "de_ch6": {
+            title: "Digital Electronics: Lecture 06",
+            questions: [
+                // --- Introduction to Counters ---
+                { q: "What is the primary function of a Digital Counter?", options: ["To store a single bit of data permanently", "To count the number of clock pulses or events applied to its input", "To perform arithmetic multiplication", "To invert input signals"], a: 1 }, //
+                { q: "Counters are constructed using a series of which component?", options: ["AND gates only", "Flip-Flops", "Multiplexers", "Resistors"], a: 1 }, //
+                { q: "The 'Modulus' (or MOD number) of a counter refers to:", options: ["The voltage it requires", "The speed of the clock", "The number of unique states it cycles through before resetting", "The number of wires used"], a: 2 }, //
+                { q: "A 3-bit binary counter has a maximum count of:", options: ["3", "7 (111)", "8 (1000)", "9"], a: 1 }, // (Counts 0-7)
+                { q: "When a counter reaches its maximum value, the next clock pulse typically causes it to:", options: ["Stop counting", "Reset to zero (000...)", "Reverse direction", "Shut down"], a: 1 }, //
+
+                // --- Asynchronous (Ripple) Counters ---
+                { q: "In an Asynchronous (Ripple) Counter, how are the clock inputs connected?", options: ["All Flip-Flops share the same central clock", "Only the first Flip-Flop receives the external clock; others are clocked by previous outputs", "The clock is connected to the Reset pin", "There is no clock"], a: 1 }, //
+                { q: "Why is it called a 'Ripple' counter?", options: ["It uses water cooling", "The state change 'ripples' through the flip-flops one by one due to propagation delays", "It generates a sine wave", "It is very fast"], a: 1 }, //
+                { q: "What is a major disadvantage of Ripple Counters at high frequencies?", options: ["They consume too much power", "Accumulated propagation delay can cause timing glitches or errors", "They require too many gates", "They are too expensive"], a: 1 }, //
+                { q: "To build a 4-bit Asynchronous UP counter using negative edge-triggered JK Flip-Flops, you connect:", options: ["Q of previous stage to Clock of next stage", "Q' (inverted) of previous stage to Clock of next stage", "All Clocks to Vcc", "All J and K inputs to 0"], a: 0 }, //
+                { q: "Which Flip-Flop mode is primarily used in Ripple Counters?", options: ["Hold Mode (J=0, K=0)", "Toggle Mode (J=1, K=1)", "Set Mode", "Reset Mode"], a: 1 }, //
+
+                // --- Synchronous Counters ---
+                { q: "What defines a 'Synchronous' Counter?", options: ["The clock signal is applied to ALL flip-flops simultaneously", "The clock signal ripples from one stage to the next", "It does not use a clock", "It uses analog components"], a: 0 }, //
+                { q: "What is the main advantage of a Synchronous Counter over a Ripple Counter?", options: ["Simpler circuit design", "Higher operating speed and fewer timing glitches", "Lower power consumption", "Uses fewer gates"], a: 1 }, //
+                { q: "In a Synchronous counter, the logic to determine the next state is handled by:", options: ["The propagation delay", "Combinational logic gates (AND/OR) connected to the J/K or T inputs", "The user manually", "The power supply"], a: 1 }, //
+                { q: "If you need to design a complex counter sequence (e.g., 0 -> 2 -> 5 -> 0), which type is preferred?", options: ["Ripple Counter", "Synchronous Counter", "Ring Counter", "Shift Register"], a: 1 }, //
+
+                // --- Counter Analysis & Frequency ---
+                { q: "A counter acts as a 'Frequency Divider'. If the input clock is 100Hz, what is the frequency at the output of the first Flip-Flop (LSB)?", options: ["100Hz", "50Hz (Divide by 2)", "25Hz", "200Hz"], a: 1 }, //
+                { q: "For a MOD-16 counter with an input frequency of 16kHz, what is the frequency of the final MSB output?", options: ["16kHz", "8kHz", "1kHz (16000 / 16)", "4kHz"], a: 2 }, //
+                { q: "What is the minimum number of Flip-Flops needed to construct a MOD-12 counter?", options: ["3 (max count 7)", "4 (max count 15)", "5 (max count 31)", "12"], a: 1 }, //
+
+                // --- Up/Down & BCD Counters ---
+                { q: "In a 3-bit Down Counter, the sequence of states is:", options: ["0, 1, 2, 3...", "7, 6, 5, 4, 3, 2, 1, 0...", "0, 2, 4, 6...", "Random"], a: 1 }, //
+                { q: "A BCD (Decade) Counter resets automatically after which count?", options: ["7 (0111)", "9 (1001)", "15 (1111)", "10 (1010)"], a: 1 }, // Note: It counts 0-9, so typically resets on the transition to 10 or naturally rolls over at 9.
+                { q: "Which logic gate is typically used to create the 'Reset' condition in a truncated ripple counter (like MOD-10)?", options: ["OR gate", "NAND gate (Active Low Clear) or AND gate (Active High Reset)", "NOT gate", "XOR gate"], a: 1 }, //
+
+                // --- Ring Counters ---
+                { q: "A Ring Counter is essentially a:", options: ["Ripple counter with an inverter", "Circulating Shift Register with the last output connected to the first input", "Synchronous counter with random logic", "Full Adder circuit"], a: 1 }, //
+                { q: "In a standard 4-bit Ring Counter, how many flip-flops are 'Set' (Logic 1) at any given time?", options: ["All of them", "None of them", "Exactly one (One-hot encoding)", "Two alternating"], a: 2 }, //
+                { q: "The state sequence for a 4-bit Ring Counter initialized with 1000 is:", options: ["1000 -> 0100 -> 0010 -> 0001 -> 1000", "0000 -> 0001 -> 0010 -> 0011", "1111 -> 0000 -> 1111", "1010 -> 0101 -> 1010"], a: 0 }, //
+                { q: "How many Flip-Flops are required for a 10-state Ring Counter (decoding a decimal digit)?", options: ["4", "10", "5", "8"], a: 1 }, // (N states = N flip-flops)
+                { q: "What is the primary disadvantage of a Ring Counter compared to a binary counter?", options: ["It is slow", "It is not efficient in hardware (uses N Flip-Flops for N states, whereas binary uses log2(N))", "It is hard to construct", "It cannot be reset"], a: 1 }, //
+                { q: "Which input signals are used to 'Initialize' the Ring Counter (e.g., setting the first bit to 1)?", options: ["Clock and Ground", "Preset (PR) and Clear (CLR)", "J and K inputs", "D inputs only"], a: 1 }, //
+
+                // --- Advanced Concepts ---
+                { q: "To convert a Ring Counter into a 'Johnson Counter' (Twisted Ring), you connect:", options: ["Q of the last stage to D of the first", "Q' (Inverted output) of the last stage to D of the first", "Output to Clock", "All inputs to 1"], a: 1 }, //
+                { q: "What happens if a Ring Counter accidentally enters a state like '1010' due to noise?", options: ["It automatically corrects itself", "It circulates the error pattern (e.g., 1010 -> 0101)", "It stops working", "It resets to 0000"], a: 1 }, //
+                { q: "Which counter type is best for decoding states without extra logic gates (decoder-less)?", options: ["Ripple Counter", "Synchronous Binary Counter", "Ring Counter", "BCD Counter"], a: 2 }, //
+                { q: "In digital electronics, 'Active Low' inputs (like Clear) are triggered by:", options: ["Logic 1 (5V)", "Logic 0 (Ground)", "Rising Edge", "Falling Edge"], a: 1 } //
+            ]
+        },
+        "de_ch7": {
+            title: "Digital Electronics: Lecture 07",
+            questions: [
+                // --- Introduction to Registers ---
+                { q: "What is the fundamental building block of a digital 'Register'?", options: ["Logic Gates", "Flip-Flops", "Multiplexers", "Encoders"], a: 1 }, //
+                { q: "An N-bit register consists of how many flip-flops?", options: ["1", "N", "2N", "N/2"], a: 1 }, //
+                { q: "What is the primary function of a Shift Register?", options: ["To perform arithmetic addition", "To store and move binary data bit-by-bit", "To decode binary to decimal", "To generate random numbers"], a: 1 }, //
+
+                // --- Modes of Operation (SISO, SIPO, PISO, PIPO) ---
+                { q: "In a 'Serial In - Serial Out' (SISO) shift register, how is data entered and retrieved?", options: ["One bit at a time for both", "All bits at once for both", "One bit in, all bits out at once", "All bits in, one bit out"], a: 0 }, //
+                { q: "For a 4-bit SISO register, how many clock pulses are required to completely LOAD a 4-bit word?", options: ["1", "2", "4", "8"], a: 2 }, //
+                { q: "Which type of register allows data to be entered one bit at a time but retrieved simultaneously on all outputs?", options: ["SISO", "SIPO", "PISO", "PIPO"], a: 1 }, //
+                { q: "A 'Parallel In - Serial Out' (PISO) register is typically used for:", options: ["Converting parallel data to serial data for transmission", "Converting serial data to parallel", "Storing data permanently", "Performing logic operations"], a: 0 }, //
+                { q: "Which shift register type is the fastest for loading and retrieving data (1 clock cycle for each)?", options: ["SISO", "SIPO", "PISO", "PIPO"], a: 3 }, //
+
+                // --- Technical Operation & Control ---
+                { q: "In a PISO register, what is the function of the 'Shift/Load' control input?", options: ["To turn off the power", "To select between loading parallel data or shifting serial data", "To reverse the direction", "To clear the register"], a: 1 }, //
+                { q: "In a SISO shift register used as a time delay, the total delay is equal to:", options: ["N + Clock Period", "N / Clock Frequency", "N × Clock Period", "Clock Frequency / N"], a: 2 }, //
+                { q: "If a 4-bit SIPO register contains '1011', and a new bit '0' enters at the LSB (shifting left), what is the new content?", options: ["0101", "0110", "1011", "1101"], a: 1 }, // (Assuming shift left behavior or right behavior, usually shifts in. If right shift 1011 -> 0101. If left shift 1011 -> 0110. Standard diagrams usually shift right, but logical descriptions vary. Let's assume standard right shift 0 -> MSB). Let's rephrase for clarity:
+                { q: "In a standard right-shift register containing '1010', if a '1' is shifted in from the left (MSB), what is the new state?", options: ["1101", "0101", "1100", "0010"], a: 0 }, // (1 enters, 0 exits LSB -> 1101)
+
+                // --- Bidirectional & Universal Registers ---
+                { q: "What capability distinguishes a 'Bidirectional' Shift Register?", options: ["It can shift data both Left and Right", "It can handle both analog and digital signals", "It has two clocks", "It uses two power supplies"], a: 0 }, //
+                { q: "A 'Universal Shift Register' can perform which of the following operations?", options: ["Only SISO and PIPO", "Only shifting left and right", "SISO, SIPO, PISO, PIPO, and Bidirectional shifting", "Only counting"], a: 2 }, //
+                { q: "In a 4-bit Universal Shift Register, how are the different modes (Hold, Shift Right, Shift Left, Load) typically selected?", options: ["By changing the voltage", "Using 2 Mode Select inputs (S1, S0) connected to a MUX", "Using 4 different clocks", "By rewiring the circuit"], a: 1 }, //
+
+                // --- Applications ---
+                { q: "Which register type is essential for converting data between a computer (Parallel) and a modem/communication line (Serial)?", options: ["SIPO only", "PISO (computer to line) and SIPO (line to computer)", "SISO only", "PIPO only"], a: 1 }, //
+                { q: "If you shift a binary number stored in a register one position to the LEFT, what arithmetic operation does it perform?", options: ["Division by 2", "Multiplication by 2", "Subtraction of 1", "Addition of 1"], a: 1 }, // (Standard binary property)
+                { q: "If you shift a binary number stored in a register one position to the RIGHT, what arithmetic operation does it perform?", options: ["Division by 2", "Multiplication by 2", "Subtraction of 1", "Addition of 1"], a: 0 }, //
+
+                // --- Ring Counters ---
+                { q: "A 'Ring Counter' is a shift register with what specific feedback connection?", options: ["Output of the last flip-flop connected to the Input of the first", "Output of the last flip-flop connected to the Clock", "Inverted output of the last flip-flop connected to the Input of the first", "No feedback"], a: 0 }, //
+                { q: "Which pattern is characteristic of a standard Ring Counter?", options: ["Binary counting (00, 01, 10...)", "One-hot encoding (only a single 1 circulates)", "Johnson pattern (group of 1s)", "Gray code"], a: 1 }, //
+                { q: "How many valid states does a 4-bit Ring Counter have?", options: ["4", "8", "16", "2"], a: 0 }, //
+                { q: "What is a disadvantage of the Ring Counter compared to a standard binary counter?", options: ["It is slower", "It is not self-starting and uses N flip-flops for N states (inefficient)", "It requires decoding logic", "It cannot be reset"], a: 1 }, //
+
+                // --- Johnson Counters ---
+                { q: "How does a 'Johnson Counter' (Twisted Ring) differ from a standard Ring Counter?", options: ["It uses XOR gates", "The INVERTED output ($Q'$) of the last stage is fed back to the input", "It connects all clocks to Vcc", "It has no feedback"], a: 1 }, //
+                { q: "How many valid states does a 4-bit Johnson Counter have?", options: ["4", "8 (2N)", "16", "32"], a: 1 }, //
+                { q: "What is the sequence of a 3-bit Johnson Counter starting at 000?", options: ["000, 001, 010...", "000, 100, 110, 111, 011, 001, 000", "000, 111, 000...", "000, 100, 010, 001"], a: 1 }, // (Fills with 1s then fills with 0s)
+                { q: "Does a Johnson Counter require a decoding circuit to detect states?", options: ["No, never", "Yes, but simpler 2-input gates than a binary counter", "Yes, extremely complex decoding", "It requires a microprocessor"], a: 1 }, //
+
+                // --- Design & Analysis ---
+                { q: "If a serial data line transmits at 1 MHz, how long does it take to load an 8-bit SISO register?", options: ["1 microsecond", "8 microseconds", "4 microseconds", "0.5 microseconds"], a: 1 }, //
+                { q: "What happens if the 'Clear' input of a register is activated?", options: ["The register stores 1111", "The register resets to 0000 immediately (Asynchronous) or at next clock (Synchronous)", "The register stops shifting", "The register shifts right"], a: 1 }, //
+                { q: "To effectively use a Ring Counter, what must happen at start-up?", options: ["It must be cleared to all 0s", "It must be pre-set with a specific pattern (usually a single 1)", "It must be disconnected", "It works automatically from 0000"], a: 1 }, //
+                { q: "The 'Parallel Load' operation in a shift register typically usually occurs:", options: ["Synchronously (with clock)", "Asynchronously (independent of clock)", "Both types exist depending on design", "Never"], a: 2 }, //
+                { q: "Which register would you use to capture a fast parallel burst of data from a sensor and then send it slowly to a microcontroller?", options: ["SIPO", "PISO", "SISO", "PIPO"], a: 1 } //
+            ]
+        }
+    };
+
+    // --- APP STATE ---
+    let currentState = {
+        name: "",
+        chapterId: "",
+        chapterTitle: "",
+        score: 0,
+        currentQuestionIndex: 0,
+        activeQuestions: [],
+        answers: [] 
+    };
+
+    // --- DOM ELEMENTS ---
+    const dom = {
+        welcome: document.getElementById('welcomeView'),
+        quiz: document.getElementById('quizView'),
+        result: document.getElementById('resultView'),
+        nameInput: document.getElementById('studentName'),
+        chapterSelect: document.getElementById('chapterSelect'),
+        qText: document.getElementById('questionText'),
+        options: document.getElementById('optionsContainer'),
+        nextBtn: document.getElementById('nextBtn'),
+        qCurrent: document.getElementById('qCurrent'),
+        qTotal: document.getElementById('qTotal'),
+        progress: document.getElementById('progressFill')
+    };
+
+    // --- INITIALIZATION ---
+    function initApp() {
+        dom.chapterSelect.innerHTML = "";
+        Object.keys(quizData).forEach(key => {
+            const option = document.createElement("option");
+            option.value = key;
+            option.text = quizData[key].title;
+            dom.chapterSelect.appendChild(option);
+        });
+    }
+    initApp();
+
+    // --- LOGIC ---
+
+    function startQuiz() {
+        const name = dom.nameInput.value.trim();
+        if (!name) {
+            alert("Please enter your full name.");
+            return;
+        }
+
+        const selectedChId = dom.chapterSelect.value;
+        if(!quizData[selectedChId]) {
+            alert("Error loading chapter.");
+            return;
+        }
+
+        currentState.name = name;
+        currentState.chapterId = selectedChId;
+        currentState.chapterTitle = quizData[selectedChId].title;
+        // Clone questions to avoid modifying original
+        currentState.activeQuestions = [...quizData[selectedChId].questions];
+        currentState.score = 0;
+        currentState.currentQuestionIndex = 0;
+        currentState.answers = [];
+        
+        dom.welcome.classList.add('hidden');
+        dom.quiz.classList.remove('hidden');
+        
+        loadQuestion(0);
+    }
+
+    function loadQuestion(index) {
+        // Scroll to top for mobile users when new question loads
+        window.scrollTo(0, 0);
+        
+        currentState.currentQuestionIndex = index;
+        const q = currentState.activeQuestions[index];
+        
+        // Update UI Text
+        dom.qCurrent.innerText = index + 1;
+        dom.qTotal.innerText = currentState.activeQuestions.length;
+        dom.qText.innerText = q.q;
+        
+        // Update Progress Bar
+        const percentage = ((index) / currentState.activeQuestions.length) * 100;
+        dom.progress.style.width = `${percentage}%`;
+
+        dom.nextBtn.disabled = true;
+        dom.nextBtn.innerText = index === currentState.activeQuestions.length - 1 ? "Finish Assessment" : "Next Question";
+
+        // Render Options
+        dom.options.innerHTML = "";
+        q.options.forEach((opt, i) => {
+            const btn = document.createElement('div');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => selectOption(btn, i, q.a);
+            dom.options.appendChild(btn);
+        });
+    }
+
+    function selectOption(btnElement, selectedIndex, correctIndex) {
+        // Disable further clicks
+        const allOpts = dom.options.children;
+        for (let opt of allOpts) {
+            opt.onclick = null; 
+            opt.style.cursor = "default";
+        }
+
+        const currentQ = currentState.activeQuestions[currentState.currentQuestionIndex];
+        const isCorrect = selectedIndex === correctIndex;
+
+        // Visual Feedback
+        if (isCorrect) {
+            btnElement.classList.add('correct');
+            currentState.score++;
+        } else {
+            btnElement.classList.add('wrong');
+            // Highlight the correct answer
+            allOpts[correctIndex].classList.add('correct');
+        }
+
+        // Record Answer
+        currentState.answers.push({
+            q: currentQ.q,
+            given: currentQ.options[selectedIndex],
+            correct: currentQ.options[correctIndex],
+            isCorrect: isCorrect
+        });
+
+        dom.nextBtn.disabled = false;
+    }
+
+    function nextQuestion() {
+        const nextIdx = currentState.currentQuestionIndex + 1;
+        if (nextIdx < currentState.activeQuestions.length) {
+            loadQuestion(nextIdx);
+        } else {
+            finishQuiz();
+        }
+    }
+
+    function finishQuiz() {
+        const totalQ = currentState.activeQuestions.length;
+        const finalScoreVal = Math.round((currentState.score / totalQ) * 100);
+        const finalScoreStr = finalScoreVal + "%";
+
+        // Update Results View
+        dom.quiz.classList.add('hidden');
+        dom.result.classList.remove('hidden');
+        
+        document.getElementById('finalScore').innerText = finalScoreStr;
+        document.getElementById('resName').innerText = currentState.name;
+        document.getElementById('resChapter').innerText = currentState.chapterTitle;
+        document.getElementById('resTotal').innerText = totalQ;
+        document.getElementById('resCorrect').innerText = currentState.score;
+        
+        let msg = "";
+        if (finalScoreVal >= 80) msg = "Outstanding! You are ready for the exam.";
+        else if (finalScoreVal >= 60) msg = "Good effort. Review the notes for tricky concepts.";
+        else msg = "Highly recommend reviewing the lecture slides again.";
+        document.getElementById('finalMsg').innerText = msg;
+
+        // Silent Submit
+        if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL.startsWith("http")) {
+            const payload = {
+                name: currentState.name,
+                chapter: currentState.chapterTitle,
+                score: finalScoreStr,
+                rawScore: currentState.score,
+                total: totalQ,
+                timestamp: new Date().toISOString()
+            };
+
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            }).catch(e => console.log("Silent logging failed", e));
+        }
+    }
+
+</script>
+</body>
+</html>
